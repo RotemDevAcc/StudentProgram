@@ -1,12 +1,16 @@
 from enum import Enum
 from functions import *
 import math
+import time
 
+USEDEFAULTS = False
 watching = None
 students = []
 
 class Test:
-    def __init__(self,type,grade) -> None:
+    def __init__(self,identifier,fullname,type,grade) -> None:
+        self.identifier = identifier
+        self.fullname = fullname
         self.type = type
         self.grade = grade
 
@@ -17,7 +21,7 @@ class Human:
         self.identifier = identifier
 
     def __str__(self) -> str:
-        return f"{self.name} - {self.identifier}"   
+        return f"{self.first_name} {self.last_name} - {self.identifier}"   
 
     def GetFullName(self):
         return f"{self.first_name} {self.last_name}"     
@@ -28,7 +32,7 @@ class Student(Human):
         self.test_list=[]
 
     def add_test(self,type,grade):
-        self.test_list.append(Test(type,grade))
+        self.test_list.append(Test(self.identifier,self.GetFullName(),type,grade))
 
     def print_tests(self):
         average = 0
@@ -38,45 +42,82 @@ class Student(Human):
     
         print(f"Average: {math.floor(average / len(self.test_list))}")
 
+    def get_tests(self):
+        AllTests = []
+        for test in self.test_list:
+            AllTests.append({"identifier" : test.identifier, "fullname": test.fullname, "type": test.type, "grade" : test.grade})
+
+        return AllTests
+
+
 class Actions(Enum):
     ADD = 1
-    SEARCH = 2  
-    LIST = 3
-    PRINTALL = 4
+    REMOVE = 2
+    SEARCH = 3  
+    PRINTS = 4
     EDIT = 5
+    CLOSE = 6
 
 def DoWhile():
     global watching
+
+
     while True:
         PrintActions(Actions)
-        if(watching != None):
+        if watching is not None:
             print(f"Watching Student: {watching.GetFullName()}")
 
-        user_action = input("Choose Your Action: ")
+        user_action = GetActionInput(Actions)
+       
+        if user_action is None:
+            continue
+
         user_action = Actions(int(user_action))
 
         if(user_action == Actions.ADD):
             AddStudent(students)
+        elif(user_action == Actions.REMOVE):
+            RemoveStudent(students)
         elif(user_action == Actions.SEARCH):
             student = FindStudent(students)
-            if(not student or student == None):
+            if not student or student is None:
                 print("Student With This ID Number Wasn't Found!")
                 continue
             watching = student
             print(f"Found: {watching.GetFullName()}")
 
-        elif(user_action == Actions.LIST):
-            PrintAllStudents(students)
-        elif(user_action == Actions.PRINTALL):
-            print(students)
+        elif(user_action == Actions.PRINTS):
+            SelectList(students)
         elif(user_action == Actions.EDIT):
-            if(watching and watching != None): EditStudent(watching)
+            if watching and watching is not None: EditStudent(students,watching)
             else: print("No Student Found")
+        elif(user_action == Actions.CLOSE):
+            seconds = 3
+            dot = "."
+            for x in range(seconds):
+                print(f"Closing Program In \033[95m{seconds - x}\033[0m Seconds")
+                time.sleep(1)
+            return
 
 
 if __name__ == "__main__":
-    student = Student("Eyal", "Test", "21744353")
-    
+    students = load_students('students_data.pkl')
+    if(not students):
+        print(1)
+        if(USEDEFAULTS):
+            print(2)
+            student = Student("Eyal", "Avramovhitz", "11")
+            student2 = Student("Professor", "Einstein", "22")
+            student.add_test("math",50)
+            student.add_test("history",74)
 
-    students.append(student)
+            student2.add_test("history",34)
+            student2.add_test("math",74)
+            
+
+            students.append(student)
+            students.append(student2)
     DoWhile()
+    print("-" * 43)
+    print(f"\033[92mSaving {len(students)} Students To Database\033[0m")
+    save_students(students, 'students_data.pkl')
