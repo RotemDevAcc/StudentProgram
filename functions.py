@@ -84,12 +84,15 @@ def GetRandomID(students):
     return str(randomid)
 
 def FindStudent(students):
-    id_number = input("Enter ID Number: ")
+    id_number = input("Enter ID Number (X To Remove Current): ")
 
     if(id_number == None or not id_number): return None
 
 
-    if(not id_number.strip().isdigit()): return None
+
+    if(not id_number.strip().isdigit()): 
+        if(id_number == "X"): return "REMOVE"
+        return None
 
     for student in students:
         if(student.identifier == id_number):
@@ -166,8 +169,7 @@ def SelectList(students):
         return
 
     print("\033[94mHow Do You Want To List The Students?\033[0m")
-    for action in ListActions:
-        print(f"{action.name} - {action.value}")
+    PrintActions(ListActions)
 
     action = ListActions(int(input(f"Choose Your Action: ")))
 
@@ -196,33 +198,49 @@ def SelectList(students):
             print(f"\033[92mAverage Score: {'No tests' if calculate_average_grade(student) == 0 else calculate_average_grade(student)}\033[0m")
             print("-" * 43)  # Separator between students
 
-
-    
-       
-
-def PrintAllStudents(students):
-    for student in students:
-        print(type(student))
-
 def PrintActions(actions):
     for action in actions:
         print(f"{action.name} - {action.value}")
+
+
+class LessonTypes(Enum):
+    HISTORY = "History"
+    MATH = "Math"
+    BIBLE = "Bible"
 
 class EditActions(Enum):
     ADDTEST = 1
     LISTTESTS = 2
 
 def EditStudent(students,student):
-    for action in EditActions:
-        print(f"{action.name} - {action.value}")
+
+    PrintActions(EditActions)
 
     action = EditActions(int(input(f"Choose Your Action For {student.GetFullName()}: ")))
 
     if(action == EditActions.ADDTEST):
-        type = input("Test Type (math,history...): ")
+        PrintActions(LessonTypes)
+        type = input("Test Type: ")
         if not type:
             print("\033[93mType Must Be Specified\033[0m")
             return
+        
+        if type.strip().isdigit():
+            print("\033[93mType Cant Be A Number\033[0m")
+            return 
+        
+        typeauthorized = False
+        for lesson in LessonTypes:
+            if(lesson.name.lower() == type.lower()):
+                typeauthorized = True
+                type = lesson.name.lower()
+                break
+
+        if typeauthorized == False:
+            print(f"SYSTEM: Lesson {type.lower()} Is Not Known")
+            return
+            
+
         grade = input("Grade (0 ~ 100): ")
 
         if(not grade):
@@ -235,6 +253,7 @@ def EditStudent(students,student):
         
         grade = int(grade)
 
+        print(f"\033[92m Added A Test In {type} With Grade {grade}\nFor Student {student.GetFullName()} - {student.identifier}\033[0m")
         student.add_test(type,grade)
         save_students(students, 'students_data.pkl')
     elif(action == EditActions.LISTTESTS):

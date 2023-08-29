@@ -79,10 +79,19 @@ def DoWhile():
         elif(user_action == Actions.REMOVE):
             RemoveStudent(students)
         elif(user_action == Actions.SEARCH):
+            
             student = FindStudent(students)
+
+            if(student == "REMOVE"):
+                if watching and watching is not None:
+                    print(f"Stopped Watching {watching}")
+                    watching = None
+                    continue
+
             if not student or student is None:
                 print("Student With This ID Number Wasn't Found!")
                 continue
+            
             watching = student
             print(f"Found: {watching.GetFullName()}")
 
@@ -90,7 +99,7 @@ def DoWhile():
             SelectList(students)
         elif(user_action == Actions.EDIT):
             if watching and watching is not None: EditStudent(students,watching)
-            else: print("No Student Found")
+            else: print("Not Watching A Student Found, Use The Search Function")
         elif(user_action == Actions.CLOSE):
             seconds = 3
             dot = "."
@@ -103,9 +112,9 @@ def DoWhile():
 if __name__ == "__main__":
     students = load_students('students_data.pkl')
     if(not students):
-        print(1)
+        print("\033[4mNo Students Found In Database\033[0m")
         if(USEDEFAULTS):
-            print(2)
+            print("Using Default Values")
             student = Student("Eyal", "Avramovhitz", "11")
             student2 = Student("Professor", "Einstein", "22")
             student.add_test("math",50)
@@ -117,7 +126,10 @@ if __name__ == "__main__":
 
             students.append(student)
             students.append(student2)
+    else:
+        print(f"\033[92mLoaded {len(students)} Student{'s' if len(students) != 1 else ''} From Database\033[0m")
+
     DoWhile()
     print("-" * 43)
-    print(f"\033[92mSaving {len(students)} Students To Database\033[0m")
+    print(f"\033[92mSaving {len(students)} Student{'s' if len(students) != 1 else ''} To Database\033[0m")
     save_students(students, 'students_data.pkl')
